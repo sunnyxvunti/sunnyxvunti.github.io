@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Howl-O-Ween Critter Crawl | Interactive AON Network</title>
+<style>
+:root{--navy:#132f4d;--navy2:#254867;--blue:#167b9b;--ink:#20364c;--muted:#60778a;--line:#d9e2ec;--panel:#fff;--bg:#eef3f8;--canvas:#f8fafc;--alert:#c6384c;--orange:#f3b35d;--mint:#168b73}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:13px/1.45 Inter,Arial,Helvetica,sans-serif}
+button,input,textarea,select{font:inherit}
+button{cursor:pointer;background:#fff;border:1px solid #cddbe7;border-radius:8px;padding:8px 10px;color:var(--ink);font-weight:700;white-space:nowrap}
+button:hover{background:#eaf3fc;border-color:#8fb6d3}
+button.primary{color:#fff;background:#127a9b;border-color:#127a9b}
+button.primary:hover{background:#086582}
+button.ghost{background:transparent;color:#e4f4ff;border-color:#54758f}
+button.ghost:hover{background:#284c68}
+.topbar{background:var(--navy);padding:14px 20px;color:#fff;display:flex;justify-content:space-between;align-items:center;gap:18px;min-height:83px}
+h1{margin:0;font-size:19px;letter-spacing:-.45px}
+.subtitle{font-size:11px;color:#b9d1e2;margin-top:4px}
+.head-actions{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}
+.layout{display:grid;grid-template-columns:280px minmax(0,1fr) 320px;height:calc(100dvh - 83px);min-height:540px}
+.left,.right{background:#fff;overflow-y:auto;padding:17px 16px}
+.left{border-right:1px solid var(--line)}.right{border-left:1px solid var(--line)}
+.kicker{font-size:10px;letter-spacing:1.7px;font-weight:850;color:#69829a;text-transform:uppercase;margin:12px 0 9px}
+.metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin:5px 0 8px}
+.metric{border:1px solid #d8e6f0;background:#f4f9fd;border-radius:9px;padding:10px 5px;text-align:center;min-width:0}
+.metric strong{font-size:22px;color:#153b59;display:block;line-height:1.13}
+.metric span{font-size:9.5px;color:#657c8e}
+.search,input,textarea,select{width:100%;border:1px solid #cddae7;border-radius:8px;background:#fbfdff;padding:10px;outline:none;color:#233f58}
+input:focus,textarea:focus,select:focus{border-color:#288dac;box-shadow:0 0 0 2px #d5edf5}
+label{font-size:11px;color:#547087;font-weight:750;display:block;margin:10px 0 5px}
+.small{font-size:11px;color:#647c90}.worklist{margin-top:8px;display:flex;flex-direction:column;gap:4px}
+.work{width:100%;text-align:left;display:flex;align-items:flex-start;gap:9px;border:1px solid transparent;background:transparent;white-space:normal;padding:8px;border-radius:7px;font-weight:500}
+.work:hover,.work.active{background:#eaf3fc;border-color:#a8c7e3}
+.work b{font-size:11px;color:#126f91;min-width:65px}
+.work em{font-style:normal;font-size:11px;line-height:1.35;color:#53677b}
+.work.crit b{color:#c6384c}
+.canvas{position:relative;overflow:hidden;background-color:var(--canvas);background-image:radial-gradient(#dce6f0 0.65px,transparent 0.65px);background-size:16px 16px}
+.canvas-header{position:absolute;z-index:2;left:12px;top:12px;right:12px;display:flex;gap:6px;align-items:center;pointer-events:none;flex-wrap:wrap}
+.canvas-header>*{pointer-events:auto}
+.canvas-header select{width:auto;max-width:155px;background:white}
+.note-mini{margin-left:auto;background:#fff;color:#647b8b;border:1px solid #dce6ef;padding:7px 9px;border-radius:8px;font-size:10px;white-space:nowrap}
+.graph-wrap{height:100%;width:100%;cursor:grab;touch-action:none}.graph-wrap.is-dragging{cursor:grabbing}
+svg#network{height:100%;width:100%;display:block;touch-action:none}
+.legend{position:absolute;bottom:12px;left:12px;right:12px;display:flex;flex-wrap:wrap;gap:12px;width:max-content;max-width:calc(100% - 24px);padding:9px 10px;background:#ffffffed;border:1px solid #d5e0e9;border-radius:9px;color:#435d73;font-size:10px;z-index:1;box-shadow:0 2px 12px #1c405614}
+.legend i{display:inline-block;vertical-align:middle;margin-right:4px;width:12px;height:9px;border:2px solid #477493;border-radius:2px;background:#d7edfa}
+.legend i.red{border-color:#c6384c;background:#ffe1e6}
+.legend i.orange{border-color:#d38b21;background:#f9cf88}
+.info{padding:10px 12px;border:1px solid #d8e4eb;background:#f3f9fd;border-radius:8px;color:#405e75;font-size:11px;margin:9px 0;line-height:1.5}
+.info.warn{background:#fff6e8;border-color:#edc791;color:#7a5621}
+.err{padding:9px;border:1px solid #f0b2b9;background:#fff0f2;border-radius:8px;color:#982a40;margin:8px 0;font-size:11px}
+.pill{display:inline-block;background:#ecf6fd;color:#1d6a8b;border:1px solid #c2dce9;border-radius:5px;padding:3px 7px;font-size:10px;font-weight:800;margin:2px 4px 2px 0}
+.pill.critical{background:#ffebee;color:#ad2b42;border-color:#efb4bd}
+.inspecttitle{font-size:17px;line-height:1.3;font-weight:800;color:var(--navy);margin:8px 0 12px}
+.inspector-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:10px 0}
+.inspector-grid div{background:#edf4fa;border:1px solid #d7e6ef;border-radius:7px;padding:9px 2px;text-align:center}
+.inspector-grid b{font-size:15px;display:block;color:#153f5d}
+.inspector-grid small{font-size:10px;color:#70869a}
+textarea{resize:vertical;min-height:66px}
+.formrow{display:flex;gap:7px;margin-top:12px}.formrow>*{flex:1}
+hr{border:0;border-top:1px solid var(--line);margin:17px 0}
+#filePick{display:none}
+@media(max-width:1180px){.layout{grid-template-columns:245px minmax(0,1fr) 275px}.topbar{padding:13px}}
+@media(max-width:850px){.layout{height:auto;display:flex;flex-direction:column}.canvas{height:65vh;min-height:490px;order:0}.left{order:1;max-height:340px;border:0;border-top:1px solid var(--line)}.right{order:2;max-height:650px;border:0;border-top:1px solid var(--line)}.topbar{flex-wrap:wrap}.head-actions{justify-content:start}.note-mini{display:none}}
+</style>
+</head>
+<body>
+<header class="topbar"><div><h1>Howl-O-Ween Critter Crawl <span style="color:#99dced;font-weight:500"> / AON Studio</span></h1><div class="subtitle">MGT 344 · 71 approved WBS activities · classic lecture-style AON nodes · editable offline</div></div>
+<div class="head-actions"><button class="ghost" id="reset">Reset data</button><button class="ghost" id="import">Import JSON</button><input id="filePick" type="file" accept="application/json,.json"><button class="ghost" id="exportJSON">Save JSON</button><button class="ghost" id="exportSVG">Export SVG</button><button class="primary" id="exportPNG">Export PNG</button></div></header>
+<div class="layout">
+<aside class="left"><div class="kicker">Project overview</div><div class="metrics"><div class="metric"><strong id="numPackages">71</strong><span>Activities</span></div><div class="metric"><strong id="days">31</strong><span>CPM days</span></div><div class="metric"><strong id="critCount">14</strong><span>Zero slack</span></div></div>
+<div id="networkInfo" class="small">Duration-only CPM · finish-to-start relationships</div>
+<div class="kicker">Find an activity</div><input id="search" placeholder="Search WBS ID or description" aria-label="Search work packages">
+<label for="stream">Workstream</label><select id="stream"><option value="all">All 5 workstreams</option></select>
+<label for="graphMode">Graph view</label><select id="graphMode"><option value="all">Entire network</option><option value="critical">Critical activities and arrows</option><option value="nearby">Selected activity + neighbors</option><option value="stream">Workstream + linked activities</option></select>
+<div class="kicker">Work packages <span id="shown"></span></div><div id="tasksList" class="worklist"></div></aside>
+<main class="canvas"><div class="canvas-header"><button id="fit">Fit all</button><button id="zoomIn">Zoom +</button><button id="zoomOut">Zoom −</button><button id="center">Center task</button><span class="note-mini">Drag canvas to pan · scroll to zoom · select node to edit</span></div>
+<div id="graphWrap" class="graph-wrap"><svg id="network" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" role="img" aria-label="Activity on Node network for 71 project work packages">
+<defs><marker id="arr" markerWidth="7" markerHeight="7" refX="9" refY="5" viewBox="0 0 10 10" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="#7890a7"/></marker><marker id="arrCrit" markerWidth="7" markerHeight="7" refX="9" refY="5" viewBox="0 0 10 10" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="#c6384c"/></marker><marker id="arrSel" markerWidth="7" markerHeight="7" refX="9" refY="5" viewBox="0 0 10 10" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="#1686b0"/></marker></defs><g id="draw"></g></svg></div>
+<div class="legend"><span><i></i>Normal activity</span><span><i class="red"></i>Critical / zero slack</span><span><i class="orange"></i>Activity description</span><span>Arrows = immediate predecessors</span><span>ES / ID / EF · SL / Activity · LS / DUR / LF</span></div>
+</main>
+<aside class="right"><div class="kicker">Selected activity</div><div id="inspector"><div class="info">Select any AON node or click its WBS ID on the left to inspect and revise its duration or predecessor links.</div></div><hr><div class="kicker">Network validation</div><div id="validation"></div><hr><div class="kicker">Lecture-based calculation</div><div class="info"><strong>Forward:</strong> ES = max predecessor EF; EF = ES + duration.<br><strong>Backward:</strong> LF = min successor LS; LS = LF − duration.<br><strong>Slack:</strong> SL = LS − ES. Zero slack marks critical activities.<br><br>Only durations and dependencies are considered. Calendar deadlines and specific clock times are <strong>not</strong> imposed.</div><div class="small">Your edits remain in the page until you export JSON. Import that JSON to reopen them in the same webpage.</div></aside>
+</div>
+<script id="sourceJSON" type="application/json">{"project": "Howl-O-Ween Critter Crawl", "tasks": [{"id": "1.1.1.1", "title": "Create Canva logo/flyer with registration QR code", "group": "Marketing", "section": "Social media marketing", "duration": 2.0, "preds": [], "updated": false, "reason": ""}, {"id": "1.1.1.2", "title": "Post digital flyer to personal and university social media", "group": "Marketing", "section": "Social media marketing", "duration": 2.0, "preds": ["1.1.1.1"], "updated": false, "reason": ""}, {"id": "1.1.1.3", "title": "Engage with event posts 2–3 times weekly; respond to questions", "group": "Marketing", "section": "Social media marketing", "duration": 5.0, "preds": ["1.1.1.2"], "updated": false, "reason": ""}, {"id": "1.1.1.4", "title": "Post event results, charity amount, and participant thanks", "group": "Marketing", "section": "Social media marketing", "duration": 1.0, "preds": ["1.4.6.6"], "updated": false, "reason": ""}, {"id": "1.1.1.5", "title": "Post volunteer recruitment flyer with QR registration (name, MUID, phone)", "group": "Marketing", "section": "Social media marketing", "duration": 1.0, "preds": [], "updated": false, "reason": ""}, {"id": "1.1.2.1", "title": "Print 30 Canva flyers", "group": "Marketing", "section": "Flyers / printed materials", "duration": 1.0, "preds": ["1.1.1.1"], "updated": false, "reason": ""}, {"id": "1.1.2.2", "title": "Post printed flyers around campus", "group": "Marketing", "section": "Flyers / printed materials", "duration": 1.0, "preds": ["1.1.2.1"], "updated": false, "reason": ""}, {"id": "1.1.2.3", "title": "Remove campus flyers after event", "group": "Marketing", "section": "Flyers / printed materials", "duration": 1.0, "preds": ["1.4.6.6"], "updated": false, "reason": ""}, {"id": "1.1.3.1", "title": "Draft animal-shelter participation PDF", "group": "Marketing", "section": "Animal shelter partnership", "duration": 7.0, "preds": [], "updated": false, "reason": ""}, {"id": "1.1.3.2", "title": "Arrange in-person meetings with at least two shelters", "group": "Marketing", "section": "Animal shelter partnership", "duration": 3.0, "preds": ["1.1.3.1"], "updated": false, "reason": ""}, {"id": "1.1.3.3", "title": "Meet shelters, present PDF, and answer questions", "group": "Marketing", "section": "Animal shelter partnership", "duration": 2.0, "preds": ["1.1.3.1", "1.1.3.2"], "updated": false, "reason": ""}, {"id": "1.1.3.4", "title": "Select a participating animal shelter", "group": "Marketing", "section": "Animal shelter partnership", "duration": 2.0, "preds": ["1.1.3.3"], "updated": false, "reason": ""}, {"id": "1.1.4.1", "title": "Draft category-specific thank-you notes with amount raised", "group": "Marketing", "section": "Thank-you notes", "duration": 2.0, "preds": ["1.5.2.2"], "updated": true, "reason": "Thank-you text must use compiled final donation total"}, {"id": "1.1.4.2", "title": "Send participant, volunteer, and sponsor thank-yous by Mon Oct 26", "group": "Marketing", "section": "Thank-you notes", "duration": 1.0, "preds": ["1.1.4.1"], "updated": true, "reason": "Hard deadline: Mon Oct 26; follow-up needed because post-event duration may make deadline infeasible"}, {"id": "1.2.1.1", "title": "Create runner registration form/QR (name, MUID, T-shirt size)", "group": "Participant / Volunteer Logistics", "section": "Registration system", "duration": 1.0, "preds": [], "updated": false, "reason": ""}, {"id": "1.2.1.2", "title": "Set up $10-per-runner payment collection", "group": "Participant / Volunteer Logistics", "section": "Registration system", "duration": 2.0, "preds": [], "updated": false, "reason": ""}, {"id": "1.2.1.3", "title": "Create participant and volunteer tracking database", "group": "Participant / Volunteer Logistics", "section": "Registration system", "duration": 1.0, "preds": ["1.2.1.2"], "updated": false, "reason": ""}, {"id": "1.2.2.1", "title": "Design sponsor-branded event T-shirt after sponsors finalized", "group": "Participant / Volunteer Logistics", "section": "T-shirt ordering", "duration": 5.0, "preds": ["1.3.1.3"], "updated": false, "reason": ""}, {"id": "1.2.2.2", "title": "Research T-shirt printers, pricing, and delivery", "group": "Participant / Volunteer Logistics", "section": "T-shirt ordering", "duration": 3.0, "preds": [], "updated": false, "reason": ""}, {"id": "1.2.2.3", "title": "Select T-shirt printer", "group": "Participant / Volunteer Logistics", "section": "T-shirt ordering", "duration": 1.0, "preds": ["1.2.2.2"], "updated": false, "reason": ""}, {"id": "1.2.2.4", "title": "Place T-shirt orders by Oct 6", "group": "Participant / Volunteer Logistics", "section": "T-shirt ordering", "duration": 1.0, "preds": ["1.2.2.1", "1.2.2.3"], "updated": true, "reason": "Keep one-day ordering task; add mandatory finish-by deadline Oct 6, distinct from task duration"}, {"id": "1.2.2.5", "title": "Verify delivered shirt quantities and sizes", "group": "Participant / Volunteer Logistics", "section": "T-shirt ordering", "duration": 1.0, "preds": ["1.2.2.4"], "updated": false, "reason": ""}, {"id": "1.3.1.1", "title": "Create business sponsorship information PDF", "group": "Fundraising / Sponsors", "section": "Business sponsorships", "duration": 5.0, "preds": [], "updated": false, "reason": ""}, {"id": "1.3.1.2", "title": "Solicit 10–20 business sponsors; follow up and meet", "group": "Fundraising / Sponsors", "section": "Business sponsorships", "duration": 3.0, "preds": ["1.3.1.1"], "updated": false, "reason": ""}, {"id": "1.3.1.3", "title": "Finalize sponsors attending race day", "group": "Fundraising / Sponsors", "section": "Business sponsorships", "duration": 7.0, "preds": ["1.3.1.2"], "updated": false, "reason": ""}, {"id": "1.3.1.4", "title": "Finalize total value of sponsor donations", "group": "Fundraising / Sponsors", "section": "Business sponsorships", "duration": 2.0, "preds": ["1.3.1.3"], "updated": false, "reason": ""}, {"id": "1.3.2.1", "title": "Identify vendors participants will value", "group": "Fundraising / Sponsors", "section": "Food / vendor partnership", "duration": 7.0, "preds": [], "updated": false, "reason": ""}, {"id": "1.3.2.2", "title": "Create vendor outreach PDF", "group": "Fundraising / Sponsors", "section": "Food / vendor partnership", "duration": 5.0, "preds": ["1.3.2.1"], "updated": false, "reason": ""}, {"id": "1.3.2.3", "title": "Invite vendors to participate on race day", "group": "Fundraising / Sponsors", "section": "Food / vendor partnership", "duration": 3.0, "preds": ["1.3.2.2"], "updated": false, "reason": ""}, {"id": "1.3.2.4", "title": "Finalize attending vendors", "group": "Fundraising / Sponsors", "section": "Food / vendor partnership", "duration": 7.0, "preds": ["1.3.2.3"], "updated": true, "reason": "ID corrected from source 1.2.3.4 to current WBS 1.3.2.4"}, {"id": "1.3.3.1", "title": "Design banners with finalized sponsors", "group": "Fundraising / Sponsors", "section": "Sponsor signage", "duration": 3.0, "preds": ["1.3.1.3"], "updated": false, "reason": ""}, {"id": "1.3.3.2", "title": "Order banners and sponsor signage", "group": "Fundraising / Sponsors", "section": "Sponsor signage", "duration": 2.0, "preds": ["1.3.3.1"], "updated": false, "reason": ""}, {"id": "1.3.3.3", "title": "Choose locations for course and plaza signage", "group": "Fundraising / Sponsors", "section": "Sponsor signage", "duration": 3.0, "preds": ["1.4.1.1"], "updated": false, "reason": ""}, {"id": "1.4.1.1", "title": "Plan one-mile campus race course", "group": "Event Execution", "section": "Race course", "duration": 7.0, "preds": ["1.4.1.3"], "updated": false, "reason": ""}, {"id": "1.4.1.2", "title": "Research permits, road closures, and university policies", "group": "Event Execution", "section": "Race course", "duration": 7.0, "preds": [], "updated": false, "reason": ""}, {"id": "1.4.1.3", "title": "Submit campus reservation request", "group": "Event Execution", "section": "Race course", "duration": 1.0, "preds": ["1.4.1.2"], "updated": false, "reason": ""}, {"id": "1.4.1.4", "title": "Obtain SGA event approval", "group": "Event Execution", "section": "Race course", "duration": 14.0, "preds": ["1.4.1.3"], "updated": false, "reason": ""}, {"id": "1.4.1.5", "title": "Submit animals-on-campus permission request", "group": "Event Execution", "section": "Race course", "duration": 1.0, "preds": ["1.4.1.2"], "updated": false, "reason": ""}, {"id": "1.4.1.6", "title": "Confirm first-aid vendor and liability waiver", "group": "Event Execution", "section": "Race course", "duration": 4.0, "preds": ["1.4.1.2"], "updated": false, "reason": ""}, {"id": "1.4.1.7", "title": "Display sponsor banners along course and Cruz Plaza", "group": "Event Execution", "section": "Race course", "duration": 1.0, "preds": ["1.3.3.3"], "updated": false, "reason": ""}, {"id": "1.4.2.1", "title": "Create volunteer GroupMe/group chat", "group": "Event Execution", "section": "Volunteer coordination", "duration": 1.0, "preds": ["1.1.1.5"], "updated": false, "reason": ""}, {"id": "1.4.2.2", "title": "Assign volunteers to stations", "group": "Event Execution", "section": "Volunteer coordination", "duration": 2.0, "preds": ["1.4.2.1"], "updated": false, "reason": ""}, {"id": "1.4.2.3", "title": "Confirm volunteers at stations 15 minutes before race", "group": "Event Execution", "section": "Volunteer coordination", "duration": 1.0, "preds": ["1.4.2.2"], "updated": false, "reason": ""}, {"id": "1.4.3.1", "title": "Draft initial race-day timetable, parking instructions, and FAQ", "group": "Event Execution", "section": "Race-day schedule", "duration": 3.0, "preds": [], "updated": false, "reason": ""}, {"id": "1.4.3.2", "title": "Digitally distribute timetable to attendees, volunteers, vendors, sponsors", "group": "Event Execution", "section": "Race-day schedule", "duration": 2.0, "preds": ["1.4.3.1"], "updated": false, "reason": ""}, {"id": "1.4.3.3", "title": "Prepare detailed schedule/map showing stations, animal adoption, vendors, restrooms", "group": "Event Execution", "section": "Race-day schedule", "duration": 3.0, "preds": ["1.4.1.1", "1.4.3.1", "1.4.4.1", "1.4.5.1", "1.4.5.2", "1.3.2.4", "1.1.3.4"], "updated": true, "reason": "Use finalized locations, partners, and planning inputs; removed physical tent/station/table setup as prerequisites"}, {"id": "1.4.3.4", "title": "Print detailed day-of schedules", "group": "Event Execution", "section": "Race-day schedule", "duration": 1.0, "preds": ["1.4.3.3"], "updated": false, "reason": ""}, {"id": "1.4.3.5", "title": "Hand out printed schedules as guests arrive", "group": "Event Execution", "section": "Race-day schedule", "duration": 1.0, "preds": ["1.4.3.4"], "updated": false, "reason": ""}, {"id": "1.4.4.1", "title": "Select course water-station locations", "group": "Event Execution", "section": "Stations / adoption area", "duration": 2.0, "preds": ["1.4.1.1"], "updated": false, "reason": ""}, {"id": "1.4.4.2", "title": "Set up first-aid tent near Cruz Plaza", "group": "Event Execution", "section": "Stations / adoption area", "duration": 1.0, "preds": [], "updated": false, "reason": ""}, {"id": "1.4.4.3", "title": "Set up course water stations", "group": "Event Execution", "section": "Stations / adoption area", "duration": 1.0, "preds": ["1.4.1.1"], "updated": false, "reason": ""}, {"id": "1.4.4.4", "title": "Set up sponsor/vendor tables at Cruz Plaza", "group": "Event Execution", "section": "Stations / adoption area", "duration": 1.0, "preds": ["1.3.2.4", "1.3.1.3"], "updated": false, "reason": ""}, {"id": "1.4.4.5", "title": "Direct shelter to Cruz Plaza and help set up animal station", "group": "Event Execution", "section": "Stations / adoption area", "duration": 1.0, "preds": ["1.4.2.2"], "updated": true, "reason": "Duration confirmed as 1 day"}, {"id": "1.4.5.1", "title": "Create event parking plan", "group": "Event Execution", "section": "Parking / spectator areas", "duration": 3.0, "preds": [], "updated": false, "reason": ""}, {"id": "1.4.5.2", "title": "Choose spectator viewing areas", "group": "Event Execution", "section": "Parking / spectator areas", "duration": 3.0, "preds": ["1.4.1.1"], "updated": false, "reason": ""}, {"id": "1.4.5.3", "title": "Communicate spectator areas with signage", "group": "Event Execution", "section": "Parking / spectator areas", "duration": 1.0, "preds": ["1.4.5.2", "1.3.3.2"], "updated": false, "reason": ""}, {"id": "1.4.5.4", "title": "Determine runner check-in station location", "group": "Event Execution", "section": "Parking / spectator areas", "duration": 1.0, "preds": ["1.4.1.1"], "updated": true, "reason": "Duration confirmed as 1 day"}, {"id": "1.4.6.1", "title": "Set up runner check-in station", "group": "Event Execution", "section": "Starting and finishing the race", "duration": 1.0, "preds": ["1.4.5.4"], "updated": false, "reason": ""}, {"id": "1.4.6.2", "title": "Check in runners 9:00–9:45 a.m. (revised from 10:00)", "group": "Event Execution", "section": "Starting and finishing the race", "duration": 1.0, "preds": ["1.4.6.1"], "updated": true, "reason": "Replaced social-media post predecessor with check-in station setup; check-in ends 9:45 a.m."}, {"id": "1.4.6.3", "title": "Distribute T-shirts during check-in", "group": "Event Execution", "section": "Starting and finishing the race", "duration": 1.0, "preds": ["1.4.6.1", "1.2.2.5"], "updated": true, "reason": "T-shirt handout runs concurrently with check-in, not after check-in finishes"}, {"id": "1.4.6.4", "title": "Line up runners at start line by 9:50 a.m.", "group": "Event Execution", "section": "Starting and finishing the race", "duration": 1.0, "preds": ["1.4.6.2", "1.4.6.3"], "updated": true, "reason": "Lineup follows check-in and shirt handout by 9:50; requires sub-day event schedule"}, {"id": "1.4.6.5", "title": "Blow horn to start race at 10:00 a.m.", "group": "Event Execution", "section": "Starting and finishing the race", "duration": 1.0, "preds": ["1.4.6.4"], "updated": false, "reason": ""}, {"id": "1.4.6.6", "title": "Conclude event at noon", "group": "Event Execution", "section": "Starting and finishing the race", "duration": 1.0, "preds": ["1.4.6.5"], "updated": false, "reason": ""}, {"id": "1.5.1.1", "title": "Remove signs by 2:00 p.m. on event day", "group": "Project Closeout", "section": "Cleanup", "duration": 1.0, "preds": ["1.4.6.6"], "updated": true, "reason": "Cleanup duration changed from 3 to 1 day; actual deadline 2 p.m. event day"}, {"id": "1.5.1.2", "title": "Dismantle sponsor/vendor tables by 2:00 p.m.", "group": "Project Closeout", "section": "Cleanup", "duration": 2.0, "preds": ["1.4.6.6"], "updated": false, "reason": ""}, {"id": "1.5.1.3", "title": "Remove water stations by 2:00 p.m.", "group": "Project Closeout", "section": "Cleanup", "duration": 1.0, "preds": ["1.4.6.6"], "updated": false, "reason": ""}, {"id": "1.5.1.4", "title": "Help animal shelter pack station and transport animals", "group": "Project Closeout", "section": "Cleanup", "duration": 2.0, "preds": ["1.4.6.6"], "updated": false, "reason": ""}, {"id": "1.5.2.1", "title": "Transfer donation to shelter", "group": "Project Closeout", "section": "Final data / report", "duration": 3.0, "preds": ["1.5.2.2"], "updated": false, "reason": ""}, {"id": "1.5.2.2", "title": "Compile final attendance and donation amounts", "group": "Project Closeout", "section": "Final data / report", "duration": 2.0, "preds": ["1.4.6.6", "1.3.1.4"], "updated": true, "reason": "Recommended: compile true final totals after event conclusion and sponsor totals; replaces before-event check-in as only event input"}, {"id": "1.5.2.3", "title": "Hold team debrief and record lessons learned", "group": "Project Closeout", "section": "Final data / report", "duration": 1.0, "preds": ["1.4.6.6"], "updated": false, "reason": ""}, {"id": "1.5.2.4", "title": "Submit final project report", "group": "Project Closeout", "section": "Final data / report", "duration": 2.0, "preds": ["1.5.2.3"], "updated": false, "reason": ""}], "project_days": 31.0, "critical_nodes": ["1.1.4.1", "1.1.4.2", "1.2.2.1", "1.2.2.4", "1.2.2.5", "1.3.1.1", "1.3.1.2", "1.3.1.3", "1.4.6.3", "1.4.6.4", "1.4.6.5", "1.4.6.6", "1.5.2.1", "1.5.2.2"], "critical_paths": [["1.3.1.1", "1.3.1.2", "1.3.1.3", "1.2.2.1", "1.2.2.4", "1.2.2.5", "1.4.6.3", "1.4.6.4", "1.4.6.5", "1.4.6.6", "1.5.2.2", "1.1.4.1", "1.1.4.2"], ["1.3.1.1", "1.3.1.2", "1.3.1.3", "1.2.2.1", "1.2.2.4", "1.2.2.5", "1.4.6.3", "1.4.6.4", "1.4.6.5", "1.4.6.6", "1.5.2.2", "1.5.2.1"]], "groups": {"Event Execution": "Event Execution", "Fundraising / Sponsors": "Fundraising / Sponsors", "Marketing": "Marketing", "Participant / Volunteer Logistics": "Participant / Volunteer Logistics", "Project Closeout": "Project Closeout"}, "source": "Approved 71 Work Packages review workbook, Nov 2026", "day_only": true}</script>
+<script>
+'use strict';
+const $ = id=>document.getElementById(id);
+const NS='http://www.w3.org/2000/svg';
+const baseline=JSON.parse($('sourceJSON').textContent);
+const original=structuredClone(baseline.tasks);
+let tasks=structuredClone(original);
+const streamGroups=[...new Set(tasks.map(t=>t.group))];
+let selected='1.3.1.1';
+let calc={},successors={},topo=[],criticalEdges=new Set(),projectDays=0,errors=[],boxMap=new Map();
+let view={x:0,y:0,w:1200,h:800},bounds={x:0,y:0,w:1200,h:800},drag=null;
+const nodeWidth=242,nodeHeight=138,colSpacing=115,rowSpacing=31;
+function element(tag,attrs,text){const e=document.createElementNS(NS,tag);for(const [k,v] of Object.entries(attrs||{}))e.setAttribute(k,String(v));if(text!==undefined)e.textContent=String(text);return e}
+const byId=()=>new Map(tasks.map(t=>[t.id,t]));
+const round=n=>(Math.abs(n-Math.round(n))<1e-7?String(Math.round(n)):String(Number(n.toFixed(2))));
+function calcNetwork(){errors=[];calc={};successors={};topo=[];criticalEdges=new Set();const by=byId();
+  if(tasks.length!==71)errors.push('Expected 71 work packages, found '+tasks.length);
+  if(by.size!==tasks.length)errors.push('Duplicate WBS IDs found');
+  for(const t of tasks){successors[t.id]=[];if(!(Number.isFinite(Number(t.duration))&&Number(t.duration)>0))errors.push('Invalid duration for '+t.id);if(!Array.isArray(t.preds))errors.push('Invalid predecessor list at '+t.id)}
+  if(errors.length)return false;
+  for(const t of tasks){for(const p of t.preds){if(!by.has(p))errors.push(t.id+' references missing ID '+p);else if(p===t.id)errors.push(t.id+' cannot precede itself');else successors[p].push(t.id)}}
+  if(errors.length)return false;
+  const incoming=new Map(tasks.map(t=>[t.id,t.preds.length]));let ready=tasks.filter(t=>!t.preds.length).map(t=>t.id).sort();
+  while(ready.length){const id=ready.shift();topo.push(id);for(const ch of successors[id]){incoming.set(ch,incoming.get(ch)-1);if(incoming.get(ch)===0){ready.push(ch);ready.sort()}}}
+  if(topo.length!==tasks.length){errors.push('Circular predecessor relationship detected');return false}
+  for(const id of topo){const t=by.get(id);const ES=t.preds.length?Math.max(...t.preds.map(p=>calc[p].EF)):0;calc[id]={ES,EF:ES+Number(t.duration)}}
+  projectDays=Math.max(...topo.map(id=>calc[id].EF));
+  for(const id of [...topo].reverse()){const t=by.get(id),s=successors[id];const LF=s.length?Math.min(...s.map(ch=>calc[ch].LS)):projectDays;const LS=LF-Number(t.duration);calc[id].LF=LF;calc[id].LS=LS;calc[id].SL=Number((LS-calc[id].ES).toFixed(6));}
+  for(const id of topo){for(const to of successors[id]){if(calc[id].SL===0&&calc[to].SL===0&&Math.abs(calc[id].EF-calc[to].ES)<1e-6)criticalEdges.add(id+'>'+to)}}
+  return true;
+}
+function visibleIds(){const mode=$('graphMode').value;const m=new Map(tasks.map(t=>[t.id,t]));
+  if(mode==='all')return new Set(topo);
+  if(mode==='critical')return new Set(topo.filter(id=>calc[id].SL===0));
+  if(mode==='nearby'){let s=new Set([selected]);const t=m.get(selected);for(const p of t.preds)s.add(p);for(const n of successors[selected]||[])s.add(n);return s;}
+  let g=$('stream').value;
+  if(g==='all')return new Set(topo);
+  let s=new Set(tasks.filter(t=>t.group===g).map(t=>t.id));for(const id of [...s]){for(const p of m.get(id).preds)s.add(p);for(const to of successors[id])s.add(to)}return s;
+}
+function wrap(str,max=26,lines=4){let words=String(str).split(/\s+/),out=[],line='';for(const w of words){if(line&&line.length+w.length+1>max){out.push(line);line=w}else line+=(line?' ':'')+w}if(line)out.push(line);if(out.length>lines){out=out.slice(0,lines);let last=out[lines-1];out[lines-1]=last.slice(0,max-1).replace(/[ ,;-]+$/,'')+'…'}return out}
+function layoutNodes(visible){const m=byId();let rawLayer={};for(const id of topo)rawLayer[id]=m.get(id).preds.length?Math.max(...m.get(id).preds.map(p=>rawLayer[p]+1)):0;
+  let layers=[...new Set(topo.filter(id=>visible.has(id)).map(id=>rawLayer[id]))].sort((a,b)=>a-b);
+  const columns=layers.map(layer=>topo.filter(id=>visible.has(id)&&rawLayer[id]===layer));
+  const positions={};for(let col=0;col<columns.length;col++)for(let j=0;j<columns[col].length;j++)positions[columns[col][j]]=j;
+  // Barycenter sort to reduce crossings in a large, many-to-many network.
+  for(let col=1;col<columns.length;col++){
+    columns[col].sort((a,b)=>{
+      const ps=id=>m.get(id).preds.filter(p=>visible.has(p));
+      const score=id=>{let list=ps(id);return list.length?list.reduce((acc,p)=>acc+(positions[p]||0),0)/list.length:positions[id]+.5};
+      return score(a)-score(b)||a.localeCompare(b)
+    });for(let j=0;j<columns[col].length;j++)positions[columns[col][j]]=j;
+  }
+  boxMap=new Map();const maxH=Math.max(...columns.map(c=>c.length),1)*(nodeHeight+rowSpacing)+95;
+  columns.forEach((column,k)=>{const used=column.length*(nodeHeight+rowSpacing)-rowSpacing;const startY=Math.max(60,(maxH-used)/2);column.forEach((id,i)=>boxMap.set(id,{x:72+k*(nodeWidth+colSpacing),y:startY+i*(nodeHeight+rowSpacing),w:nodeWidth,h:nodeHeight}))});
+  bounds={x:0,y:0,w:Math.max(850,columns.length*(nodeWidth+colSpacing)+110),h:maxH+50};
+}
+function drawNode(id,group){const t=byId().get(id),m=calc[id],pos=boxMap.get(id),critical=m.SL===0,picked=id===selected;
+  const g=element('g',{transform:`translate(${pos.x},${pos.y})`,style:'cursor:pointer',tabindex:0,role:'button','aria-label':id+' '+t.title});
+  const border=picked?'#0b82b0':critical?'#c6384c':'#527d9e';const thick=picked?3.3:critical?2.8:1.65;
+  g.append(element('rect',{x:0,y:0,rx:3,ry:3,width:nodeWidth,height:nodeHeight,fill:'#e7f2fb',stroke:border,'stroke-width':thick}));
+  g.append(element('rect',{x:53,y:35,width:nodeWidth-54,height:68,fill:critical?'#ffc4a2':'#ffd08a'}));
+  g.append(element('line',{x1:0,y1:35,x2:nodeWidth,y2:35,stroke:border,'stroke-width':1.1}));
+  g.append(element('line',{x1:0,y1:103,x2:nodeWidth,y2:103,stroke:border,'stroke-width':1.1}));
+  g.append(element('line',{x1:53,y1:0,x2:53,y2:nodeHeight,stroke:border,'stroke-width':1.1}));
+  g.append(element('line',{x1:173,y1:0,x2:173,y2:35,stroke:border,'stroke-width':1.1}));
+  g.append(element('line',{x1:173,y1:103,x2:173,y2:nodeHeight,stroke:border,'stroke-width':1.1}));
+  const center=(x,y,str,size=12,color='#203b52',bold=true)=>g.append(element('text',{x,y,'font-size':size,'font-family':'Arial,Helvetica,sans-serif','text-anchor':'middle','dominant-baseline':'middle',fill:color,'font-weight':bold?700:500},str));
+  center(26,17,'ES '+round(m.ES),11.2);center(112,17,id,13.4,critical?'#aa263b':'#164b70');center(208,17,'EF '+round(m.EF),11.2);
+  center(26,69,'SL '+round(m.SL),11.5,critical?'#bb2b41':'#164b70');
+  const lines=wrap(t.title,29,4),textHeight=13.6,centerY=69.5;lines.forEach((line,i)=>center(147,centerY+(i-(lines.length-1)/2)*textHeight,line,10.5,'#253446',true));
+  center(26,120,'LS '+round(m.LS),11.2);center(112,120,'DUR '+round(t.duration),11.2);center(208,120,'LF '+round(m.LF),11.2);
+  const title=element('title',{},id+' • '+t.title+'\nDUR '+t.duration+' • ES '+round(m.ES)+' EF '+round(m.EF)+' LS '+round(m.LS)+' LF '+round(m.LF)+' SL '+round(m.SL));g.append(title);
+  g.addEventListener('click',e=>{e.stopPropagation();selected=id;refresh(false)});
+  g.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();selected=id;refresh(false)}});group.append(g);
+}
+function graphDraw(){const layer=$('draw');layer.replaceChildren();boxMap=new Map();if(errors.length){layer.append(element('text',{x:30,y:70,fill:'#b91c1c','font-size':19},'Fix invalid predecessor links to redraw the network.'));return}
+  const visible=visibleIds();layoutNodes(visible);
+  const edgeGroup=element('g'),nodeGroup=element('g');layer.append(edgeGroup,nodeGroup);
+  for(const t of tasks){if(!visible.has(t.id))continue;const end=boxMap.get(t.id);
+    for(const pre of t.preds){if(!visible.has(pre))continue;const start=boxMap.get(pre);
+      const sx=start.x+nodeWidth,sy=start.y+nodeHeight/2,ex=end.x,ey=end.y+nodeHeight/2,dx=Math.max(30,(ex-sx)*.45);
+      const isCritical=criticalEdges.has(pre+'>'+t.id),isSelected=(pre===selected||t.id===selected);
+      let stroke=isSelected?'#178ab2':isCritical?'#c6384c':'#8298af';let marker=isSelected?'arrSel':isCritical?'arrCrit':'arr';
+      const path=element('path',{d:`M ${sx} ${sy} C ${sx+dx} ${sy}, ${ex-dx} ${ey}, ${ex} ${ey}`,fill:'none',stroke,'stroke-width':isSelected?3.3:isCritical?2.8:1.65,opacity:isSelected?1:isCritical?.98:.68,'marker-end':`url(#${marker})`});edgeGroup.append(path)
+    }
+  }
+  for(const id of topo){if(visible.has(id))drawNode(id,nodeGroup)}
+  $('shown').textContent='('+visible.size+' in diagram)';
+}
+function fit(){const rect=$('graphWrap').getBoundingClientRect();const aspect=rect.width/Math.max(rect.height,1);const width=bounds.w+100,height=bounds.h+90;let w=Math.max(width,height*aspect),h=w/aspect;view={x:bounds.x-(w-width)/2-50,y:bounds.y-(h-height)/2-45,w,h};applyView()}
+function applyView(){$('network').setAttribute('viewBox',`${view.x} ${view.y} ${view.w} ${view.h}`)}
+function zoom(ratio,p={x:view.x+view.w/2,y:view.y+view.h/2}){view.x=p.x-(p.x-view.x)*ratio;view.y=p.y-(p.y-view.y)*ratio;view.w*=ratio;view.h*=ratio;applyView()}
+function centerTask(id){const p=boxMap.get(id);if(!p)return;view.x=p.x+p.w/2-view.w/2;view.y=p.y+p.h/2-view.h/2;applyView()}
+function taskList(){const box=$('tasksList');box.replaceChildren();const query=$('search').value.trim().toLowerCase(),stream=$('stream').value;
+  const shown=tasks.filter(t=>(stream==='all'||t.group===stream)&&(!query||(t.id+' '+t.title).toLowerCase().includes(query)));
+  for(const t of shown){const b=document.createElement('button');b.className='work'+(t.id===selected?' active':'')+(calc[t.id]?.SL===0?' crit':'');
+    const k=document.createElement('b');k.textContent=t.id;const n=document.createElement('em');n.textContent=t.title;b.append(k,n);
+    b.onclick=()=>{selected=t.id;refresh(false);if(!boxMap.has(t.id)){$('graphMode').value='nearby';refresh(true)}centerTask(t.id)};box.append(b)
+  }
+  if(!shown.length){const p=document.createElement('p');p.className='small';p.textContent='No matching activities.';box.append(p)}
+}
+function renderInspector(){const root=$('inspector');root.replaceChildren();const t=tasks.find(t=>t.id===selected);if(!t)return;
+  const head=document.createElement('div');head.innerHTML='<span class="pill">'+t.id+'</span>'+(calc[t.id]?.SL===0?'<span class="pill critical">CRITICAL</span>':'');root.append(head);
+  const h=document.createElement('h2');h.className='inspecttitle';h.textContent=t.title;root.append(h);
+  if(calc[t.id]){const stats=document.createElement('div');stats.className='inspector-grid';for(const k of ['ES','EF','SL','LS','LF','DUR']){let m=document.createElement('div'),n=document.createElement('b'),label=document.createElement('small');n.textContent=k==='DUR'?round(t.duration):round(calc[t.id][k]);label.textContent=k;m.append(n,label);stats.append(m)}root.append(stats)}
+  const form=document.createElement('form');form.innerHTML=`<label>Activity title</label><textarea name="title" required></textarea><label>Duration (days)</label><input name="duration" type="number" min="0.1" step="0.1" required><label>Immediate predecessors (WBS IDs)</label><textarea name="preds" placeholder="1.2.2.1, 1.2.2.3"></textarea><div class="small">Use commas between IDs; leave blank if there is no predecessor. These are finish-to-start links.</div><div class="formrow"><button type="submit" class="primary">Apply & recalculate</button><button type="button" id="revertOne">Revert task</button></div>`;
+  form.elements.title.value=t.title;form.elements.duration.value=t.duration;form.elements.preds.value=t.preds.join(', ');
+  form.addEventListener('submit',e=>{e.preventDefault();const prev=structuredClone(t);const updated={title:form.elements.title.value.trim(),duration:Number(form.elements.duration.value),preds:[...new Set(form.elements.preds.value.split(/[;,\n]+/).map(x=>x.trim()).filter(Boolean))]};
+    Object.assign(t,updated);if(!calcNetwork()){const msg=errors.join('\n');Object.assign(t,prev);calcNetwork();alert('Change not applied:\n'+msg);return}refresh(false)
+  });root.append(form);
+  form.querySelector('#revertOne').onclick=()=>{const old=original.find(x=>x.id===t.id);Object.assign(t,structuredClone(old));refresh(false)};
+  const conn=document.createElement('div');conn.className='info';conn.innerHTML='<b>Predecessors</b><div id="prevText"></div><b>Successors</b><div id="nextText"></div>';
+  conn.querySelector('#prevText').textContent=t.preds.join(', ')||'None — project start';conn.querySelector('#nextText').textContent=(successors[t.id]||[]).join(', ')||'None — terminal activity';root.append(conn);
+}
+function renderValidation(){const v=$('validation');v.replaceChildren();if(errors.length){for(const e of errors){const d=document.createElement('div');d.className='err';d.textContent=e;v.append(d)}return}
+  const info=document.createElement('div');info.className='info';info.innerHTML='<strong>Network valid</strong><br>All 71 IDs unique · all predecessors exist · no cycles detected · duration-only CPM.';v.append(info);
+  const endpoints=topo.filter(id=>successors[id].length===0);let c=topo.filter(id=>calc[id].SL===0).length;
+  const details=document.createElement('div');details.className='small';details.textContent=`${c} zero-slack activities · ${endpoints.length} terminal activities · maximum slack ${round(Math.max(...topo.map(id=>calc[id].SL)))} days.`;v.append(details);
+}
+function refresh(refit=true){const okay=calcNetwork();$('numPackages').textContent=tasks.length;$('days').textContent=okay?round(projectDays):'!';$('critCount').textContent=okay?topo.filter(id=>calc[id].SL===0).length:'!';$('networkInfo').textContent=okay?`Day 0 start · ${round(projectDays)}-day duration · editable network`:'Fix link validation errors';taskList();graphDraw();renderInspector();renderValidation();if(refit&&okay)fit()}
+function fileSave(name,blob){const url=URL.createObjectURL(blob);const link=document.createElement('a');link.href=url;link.download=name;link.click();setTimeout(()=>URL.revokeObjectURL(url),1500)}
+function svgForExport(){const clone=$('network').cloneNode(true),pad=55;
+  clone.setAttribute('xmlns','http://www.w3.org/2000/svg');clone.setAttribute('viewBox',`${bounds.x-pad} ${bounds.y-pad} ${bounds.w+2*pad} ${bounds.h+2*pad}`);
+  clone.setAttribute('width',bounds.w+2*pad);clone.setAttribute('height',bounds.h+2*pad);
+  const bg=element('rect',{x:bounds.x-pad,y:bounds.y-pad,width:bounds.w+2*pad,height:bounds.h+2*pad,fill:'#f8fafc'});clone.insertBefore(bg,clone.querySelector('#draw'));
+  return new XMLSerializer().serializeToString(clone)
+}
+$('fit').onclick=fit;$('zoomIn').onclick=()=>zoom(.75);$('zoomOut').onclick=()=>zoom(1.3);$('center').onclick=()=>centerTask(selected);
+$('search').addEventListener('input',taskList);$('stream').addEventListener('change',()=>refresh(true));$('graphMode').addEventListener('change',()=>refresh(true));
+$('reset').onclick=()=>{if(confirm('Reset all activities to the approved 71-package schedule?')){tasks=structuredClone(original);selected='1.3.1.1';$('stream').value='all';$('graphMode').value='all';$('search').value='';refresh(true)}};
+$('exportJSON').onclick=()=>fileSave('Howl_O_Ween_AON_Edits.json',new Blob([JSON.stringify({project:baseline.project,tasks,saved:new Date().toISOString()},null,2)],{type:'application/json'}));
+$('import').onclick=()=>$('filePick').click();$('filePick').onchange=async e=>{const file=e.target.files[0];if(!file)return;try{const object=JSON.parse(await file.text());if(!Array.isArray(object.tasks)||object.tasks.length!==71)throw Error('JSON must contain 71 tasks');const ids=object.tasks.map(t=>t.id).sort().join('|');if(ids!==original.map(t=>t.id).sort().join('|'))throw Error('WBS ID set must remain the approved 71 IDs');const before=tasks;tasks=object.tasks;if(!calcNetwork()){const err=errors.join('; ');tasks=before;calcNetwork();throw Error(err)}refresh(true)}catch(e){alert('Could not import: '+e.message)}$('filePick').value=''};
+$('exportSVG').onclick=()=>fileSave('Howl_O_Ween_AON_Network.svg',new Blob([svgForExport()],{type:'image/svg+xml;charset=utf-8'}));
+$('exportPNG').onclick=()=>{const svg=svgForExport(),src=URL.createObjectURL(new Blob([svg],{type:'image/svg+xml;charset=utf-8'})),image=new Image();image.onload=()=>{const max=7200,ratio=Math.min(2,max/image.width,max/image.height);const canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(image.width*ratio));canvas.height=Math.max(1,Math.round(image.height*ratio));const ctx=canvas.getContext('2d');ctx.fillStyle='#f8fafc';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.drawImage(image,0,0,canvas.width,canvas.height);canvas.toBlob(b=>{if(b)fileSave('Howl_O_Ween_AON_Network.png',b)},'image/png');URL.revokeObjectURL(src)};image.onerror=()=>{URL.revokeObjectURL(src);alert('PNG export failed in this browser. Use Export SVG instead.')};image.src=src};
+const svg=$('network');function eventPoint(e){const r=svg.getBoundingClientRect();return{x:view.x+(e.clientX-r.left)/r.width*view.w,y:view.y+(e.clientY-r.top)/r.height*view.h}}
+svg.addEventListener('wheel',e=>{e.preventDefault();zoom(e.deltaY>0?1.15:.88,eventPoint(e))},{passive:false});
+svg.addEventListener('pointerdown',e=>{if(e.target.closest('[role="button"]'))return;drag={x:e.clientX,y:e.clientY,startX:view.x,startY:view.y};svg.setPointerCapture(e.pointerId);$('graphWrap').classList.add('is-dragging')});
+svg.addEventListener('pointermove',e=>{if(!drag)return;const r=svg.getBoundingClientRect();view.x=drag.startX-(e.clientX-drag.x)/r.width*view.w;view.y=drag.startY-(e.clientY-drag.y)/r.height*view.h;applyView()});
+svg.addEventListener('pointerup',()=>{drag=null;$('graphWrap').classList.remove('is-dragging')});svg.addEventListener('pointercancel',()=>{drag=null;$('graphWrap').classList.remove('is-dragging')});
+for(const stream of streamGroups){const option=document.createElement('option');option.value=stream;option.textContent=stream;$('stream').append(option)}
+refresh(true);
+</script>
+</body>
+</html>
